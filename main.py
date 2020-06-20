@@ -8,6 +8,7 @@ from sac import SAC
 from torch.utils.tensorboard import SummaryWriter
 from replay_memory import ReplayMemory
 
+from relabel import inverseRL
 from metaworld.benchmarks import MT10
 
 parser = argparse.ArgumentParser(description='PyTorch Soft Actor-Critic Args')
@@ -52,9 +53,9 @@ args = parser.parse_args()
 # env = NormalizedActions(gym.make(args.env_name))
 env = MT10.get_train_tasks()
 #env = gym.make(args.env_name)
-#torch.manual_seed(args.seed)
-#np.random.seed(args.seed)
-#env.seed(args.seed)
+torch.manual_seed(args.seed)
+np.random.seed(args.seed)
+env.seed(args.seed)
 
 # Agent
 agent = SAC(env.observation_space.shape[0], env.action_space, args)
@@ -95,7 +96,7 @@ for i_episode in itertools.count(1):
                 writer.add_scalar('entropy_temprature/alpha', alpha, updates)
                 updates += 1
  
-        next_state, reward, done, _ = env.step(action) # Step
+        next_state, reward, done, info = env.step(action) # Step
         episode_steps += 1
         total_numsteps += 1
         episode_reward += reward
@@ -104,9 +105,11 @@ for i_episode in itertools.count(1):
         # (https://github.com/openai/spinningup/blob/master/spinup/algos/sac/sac.py)
         mask = 1 if episode_steps == 150 else float(not done)       # max steps for MT10 is 150
 
-        memory.push(state, action, reward, next_state, mask) # Append transition to memory
+        memory.push(state, action, reward, next_state, mask, info['rightFinger'], info['leftFinger']) # Append transition to memory
 
         state = next_state
+
+    inverseRL(episode_steps, memory, env, agent, args.cuda)
 
     if total_numsteps > args.num_steps:
         break
