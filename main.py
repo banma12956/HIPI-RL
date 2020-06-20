@@ -117,15 +117,16 @@ for i_episode in itertools.count(1):
     if i_episode % 10 == 0 and args.eval is True:
         avg_reward = 0.
         episodes = 10
+        mt10_test_env = MT10.get_test_tasks()
         for _  in range(episodes):
-            state = env.reset()
+            state = mt10_test_env.reset()
             episode_reward = 0
             done = False
             eval_step = 0
             while not done and (eval_step < 150):
                 action = agent.select_action(state, evaluate=True)
 
-                next_state, reward, done, _ = env.step(action)
+                next_state, reward, done, _ = mt10_test_env.step(action)
                 episode_reward += reward
                 eval_step += 1
 
