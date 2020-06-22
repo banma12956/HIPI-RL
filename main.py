@@ -61,11 +61,14 @@ env.seed(args.seed)
 agent = SAC(env.observation_space.shape[0], env.action_space, args)
 
 #Tesnorboard
-writer = SummaryWriter('runs/{}_SAC_temp10_{}_{}_{}'.format(datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"), args.env_name,
+writer = SummaryWriter('runs/{}_SAC_batch_{}_{}_{}'.format(datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"), args.env_name,
                                                              args.policy, "autotune" if args.automatic_entropy_tuning else ""))
 
 # Memory
 memory = ReplayMemory(args.replay_size)
+
+# IRL batch
+irl_batch = 500
 
 # Training Loop
 total_numsteps = 0
@@ -109,7 +112,8 @@ for i_episode in itertools.count(1):
 
         state = next_state
 
-    inverseRL(episode_steps, memory, env, agent, args.cuda)
+        if total_numsteps % irl_batch == 0:
+            inverseRL(irl_batch, memory, env, agent, args.cuda)
 
     if total_numsteps > args.num_steps:
         break
