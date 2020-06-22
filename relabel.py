@@ -11,7 +11,12 @@ def inverseRL(steps, memory, env, agent, cuda):
     device = torch.device("cuda" if cuda else "cpu")
 
     rpm_start_pos = memory.position - steps
-    episode_exp = memory.buffer[rpm_start_pos:memory.position] 
+    
+    if rpm_start_pos < 0:
+        rpm_start_pos = memory.capacity + rpm_start_pos
+        episode_exp = np.concatenate((memory.buffer[rpm_start_pos:], memory.buffer[:memory.position]))
+    else:
+        episode_exp = memory.buffer[rpm_start_pos:memory.position] 
     state, action, reward, next_state, done, rightFinger, leftFinger = map(np.stack, zip(*episode_exp))  
 
     obs_dim = env.observation_space.shape[0]
@@ -44,8 +49,9 @@ def inverseRL(steps, memory, env, agent, cuda):
     # print(Q_all[-1])
     # print(R_1)
     # print(Z)
-
-    prob = F.softmax(R_1-torch.log(Z), dim=-1)
+    
+    logits = torch.pow(R_1-torch.log(Z),10)
+    prob = F.softmax(logits, dim=-1)
     # print(prob)
     m = torch.distributions.Categorical(prob)
     reward_index = m.sample()

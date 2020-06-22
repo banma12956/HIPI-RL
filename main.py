@@ -33,8 +33,8 @@ parser.add_argument('--seed', type=int, default=123456, metavar='N',
                     help='random seed (default: 123456)')
 parser.add_argument('--batch_size', type=int, default=256, metavar='N',
                     help='batch size (default: 256)')
-parser.add_argument('--num_steps', type=int, default=1000001, metavar='N',
-                    help='maximum number of steps (default: 1000000)')
+parser.add_argument('--num_steps', type=int, default=500001, metavar='N',
+                    help='maximum number of steps (default: 500000)')
 parser.add_argument('--hidden_size', type=int, default=256, metavar='N',
                     help='hidden size (default: 256)')
 parser.add_argument('--updates_per_step', type=int, default=1, metavar='N',
@@ -61,7 +61,7 @@ env.seed(args.seed)
 agent = SAC(env.observation_space.shape[0], env.action_space, args)
 
 #Tesnorboard
-writer = SummaryWriter('runs/{}_SAC_{}_{}_{}'.format(datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"), args.env_name,
+writer = SummaryWriter('runs/{}_SAC_temp10_{}_{}_{}'.format(datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"), args.env_name,
                                                              args.policy, "autotune" if args.automatic_entropy_tuning else ""))
 
 # Memory
@@ -89,11 +89,11 @@ for i_episode in itertools.count(1):
                 # Update parameters of all the networks
                 critic_1_loss, critic_2_loss, policy_loss, ent_loss, alpha = agent.update_parameters(memory, args.batch_size, updates)
 
-                writer.add_scalar('loss/critic_1', critic_1_loss, updates)
-                writer.add_scalar('loss/critic_2', critic_2_loss, updates)
-                writer.add_scalar('loss/policy', policy_loss, updates)
-                writer.add_scalar('loss/entropy_loss', ent_loss, updates)
-                writer.add_scalar('entropy_temprature/alpha', alpha, updates)
+                # writer.add_scalar('loss/critic_1', critic_1_loss, updates)
+                #writer.add_scalar('loss/critic_2', critic_2_loss, updates)
+                #writer.add_scalar('loss/policy', policy_loss, updates)
+                #writer.add_scalar('loss/entropy_loss', ent_loss, updates)
+                #writer.add_scalar('entropy_temprature/alpha', alpha, updates)
                 updates += 1
  
         next_state, reward, done, info = env.step(action) # Step
@@ -117,7 +117,7 @@ for i_episode in itertools.count(1):
     writer.add_scalar('reward/train', episode_reward, i_episode)
     print("Episode: {}, total numsteps: {}, episode steps: {}, reward: {}".format(i_episode, total_numsteps, episode_steps, round(episode_reward, 2)))
 
-    if i_episode % 10 == 0 and args.eval is True:
+    if i_episode % 100 == 0 and args.eval is True:
         avg_reward = 0.
         episodes = 10
         mt10_test_env = MT10.get_test_tasks()
